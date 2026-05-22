@@ -14,6 +14,12 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: nav.push }),
 }));
 
+// SideNav now embeds LogoutButton → useAuth. Stub the hook so screen tests
+// don't need a real AuthProvider tree.
+vi.mock('@/context/AuthProvider', () => ({
+  useAuth: () => ({ user: null, loading: false, signOut: vi.fn() }),
+}));
+
 beforeEach(() => {
   nav.params = new URLSearchParams();
   nav.push.mockClear();

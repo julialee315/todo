@@ -13,6 +13,7 @@ import { CATEGORIES, VIEWS } from '@/lib/store/sample-data';
 import { viewCount, catCount } from '@/lib/store/selectors';
 import { Icon } from '@/components/shared/Icon';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
+import { LogoutButton } from '@/components/shared/LogoutButton';
 
 interface SideNavProps {
   activeView?: ViewId | null;
@@ -124,6 +125,7 @@ export function SideNav({ activeView, activeCat, activeRoute }: SideNavProps) {
 
       <div className="nav__footer" style={{ marginTop: 'auto', paddingTop: 8 }}>
         <ThemeToggle />
+        <LogoutButton />
       </div>
     </aside>
   );

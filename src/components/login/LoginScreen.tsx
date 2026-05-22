@@ -1,21 +1,54 @@
 'use client';
 
-// Login screen — split layout: dark hero on the left, form on the right.
-// Presentational: there is no real auth, so the login and social buttons just
-// route to /main.
+// Login screen — split layout: dark hero on the left, auth surface on the
+// right. The right pane has a Google button, a divider, then a 로그인/회원가입
+// tab pair that swaps EmailPasswordForm's mode. Errors from AuthProvider land
+// in <AuthError /> above the form.
+//
+// On a successful signin/signup we router.push('/main'). The middleware would
+// also redirect on the next request, but pushing here makes the success feel
+// instant.
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon, GoogleIcon } from '@/components/shared/Icon';
-import { Check } from '@/components/shared/Check';
+import { EmailPasswordForm } from '@/components/login/EmailPasswordForm';
+import { AuthError } from '@/components/login/AuthError';
+import { useAuth } from '@/context/AuthProvider';
+
+type Tab = 'signin' | 'signup';
 
 export function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('minji@demodev.kr');
-  const [pw, setPw] = useState('••••••••••');
-  const [remember, setRemember] = useState(true);
+  const search = useSearchParams();
+  const { signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth();
 
-  const goToMain = () => router.push('/main');
+  const [tab, setTab] = useState<Tab>('signin');
+  const [error, setError] = useState<string | null>(
+    () => search?.get('error') ?? null,
+  );
+
+  const target = search?.get('redirect') ?? '/main';
+
+  async function handleSubmit(email: string, password: string) {
+    setError(null);
+    const res =
+      tab === 'signin'
+        ? await signInWithPassword(email, password)
+        : await signUpWithPassword(email, password);
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
+    router.push(target);
+  }
+
+  async function handleGoogle() {
+    setError(null);
+    const res = await signInWithGoogle();
+    if (res.error) setError(res.error);
+    // Success path is a full-page OAuth redirect; nothing else to do here.
+  }
 
   return (
     <div className="login">
@@ -51,86 +84,55 @@ export function LoginScreen() {
         </div>
       </div>
 
-      {/* Form */}
+      {/* Auth surface */}
       <div className="login__pane">
         <div className="login__form">
           <div>
             <h1>다시 오신 것을 환영합니다</h1>
             <p style={{ marginTop: 8 }}>
-              계정에 로그인하고 오늘의 할 일을 확인하세요.
+              계정에 로그인하거나 새로 가입하고 오늘의 할 일을 확인하세요.
             </p>
           </div>
 
-          <div className="login__alt">
-            <button
-              className="btn btn--outline"
-              type="button"
-              style={{ height: 44, justifyContent: 'center', gap: 8 }}
-              onClick={goToMain}
-            >
-              <GoogleIcon size={16} /> Google
-            </button>
-            <button
-              className="btn btn--outline"
-              type="button"
-              style={{ height: 44, justifyContent: 'center', gap: 8 }}
-              onClick={goToMain}
-            >
-              <Icon name="github" size={16} /> GitHub
-            </button>
-          </div>
+          <button
+            className="btn btn--outline"
+            type="button"
+            style={{ height: 44, justifyContent: 'center', gap: 8, width: '100%' }}
+            onClick={handleGoogle}
+            aria-label="Google로 계속하기"
+          >
+            <GoogleIcon size={16} /> Google로 계속하기
+          </button>
 
           <div className="login__divider">또는 이메일로</div>
 
-          <div className="login__group">
-            <label htmlFor="login-email">이메일</label>
-            <div className="field field--lg">
-              <input
-                id="login-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-              />
-            </div>
+          {/* Tab pair */}
+          <div role="tablist" aria-label="인증 모드" className="login__tabs">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'signin'}
+              className={'btn btn--ghost' + (tab === 'signin' ? ' is-active' : '')}
+              onClick={() => setTab('signin')}
+              style={{ flex: 1 }}
+            >
+              로그인
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'signup'}
+              className={'btn btn--ghost' + (tab === 'signup' ? ' is-active' : '')}
+              onClick={() => setTab('signup')}
+              style={{ flex: 1 }}
+            >
+              회원가입
+            </button>
           </div>
 
-          <div className="login__group">
-            <div className="login__row">
-              <label htmlFor="login-pw">비밀번호</label>
-              <a href="#">잊어버리셨나요?</a>
-            </div>
-            <div className="field field--lg">
-              <input
-                id="login-pw"
-                type="password"
-                value={pw}
-                onChange={(e) => setPw(e.target.value)}
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
+          {error && <AuthError message={error} />}
 
-          <div className="cb">
-            <Check
-              checked={remember}
-              onToggle={() => setRemember((r) => !r)}
-              label="로그인 상태 유지"
-            />
-            <span>로그인 상태 유지</span>
-          </div>
-
-          <button
-            className="btn btn--primary btn--lg btn--block"
-            type="button"
-            onClick={goToMain}
-          >
-            로그인
-          </button>
-
-          <div className="login__signup">
-            계정이 없으신가요? <a href="#">무료로 시작하기</a>
-          </div>
+          <EmailPasswordForm mode={tab} onSubmit={handleSubmit} />
         </div>
       </div>
     </div>

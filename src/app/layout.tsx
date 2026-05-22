@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import '../styles/colors_and_type.css';
 import '../styles/todo.css';
+import { AuthProvider } from '@/context/AuthProvider';
 import { ThemeProvider } from '@/context/ThemeProvider';
 import { TasksProvider } from '@/context/TasksProvider';
 
@@ -22,9 +23,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        <ThemeProvider>
-          <TasksProvider>{children}</TasksProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <TasksProvider>{children}</TasksProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

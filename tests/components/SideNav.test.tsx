@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+// The new LogoutButton inside SideNav reads useAuth() → mock the provider's
+// hook so this test doesn't need to spin up a Supabase mock.
+const signOut = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock('@/context/AuthProvider', () => ({
+  useAuth: () => ({ signOut, user: null, loading: false }),
+}));
+
 import { SideNav } from '@/components/shared/SideNav';
 import { TasksProvider } from '@/context/TasksProvider';
 import { ThemeProvider } from '@/context/ThemeProvider';
@@ -10,7 +17,10 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push }),
 }));
 
-beforeEach(() => push.mockClear());
+beforeEach(() => {
+  push.mockClear();
+  signOut.mockClear();
+});
 
 function renderNav(props: Parameters<typeof SideNav>[0] = {}) {
   return render(
@@ -81,5 +91,18 @@ describe('SideNav', () => {
     expect(
       screen.getByRole('switch', { name: /테마/ }),
     ).toBeInTheDocument();
+  });
+
+  it('renders the logout button in the footer', () => {
+    renderNav();
+    expect(
+      screen.getByRole('button', { name: '로그아웃' }),
+    ).toBeInTheDocument();
+  });
+
+  it('calls signOut when the logout button is clicked', async () => {
+    renderNav();
+    await userEvent.click(screen.getByRole('button', { name: '로그아웃' }));
+    expect(signOut).toHaveBeenCalledTimes(1);
   });
 });

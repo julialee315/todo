@@ -76,26 +76,26 @@ description: "다중 사용자 클라우드 동기화 Todo — task 분해"
 
 ### Tests for User Story 1 (write FIRST, ensure FAIL) ⚠️
 
-- [ ] T019 [P] [US1] `tests/components/AuthProvider.test.tsx` — 가입/로그인/로그아웃 성공·실패 경로 검증 (`@supabase/ssr` boundary 모킹). `loading` 상태 전이도 검증
-- [ ] T020 [P] [US1] `tests/components/EmailPasswordForm.test.tsx` — 입력·제출(Enter 포함)·오류 표시·`aria-invalid` 토글 검증
-- [ ] T021 [P] [US1] `tests/components/LoginScreen.test.tsx` 갱신 — 로그인/회원가입 탭 전환, 폼 마운트, AuthError 표시 (Google 버튼은 stub 처리)
-- [ ] T022 [P] [US1] `tests/components/LogoutButton.test.tsx` — 클릭 시 `signOut` 호출되는지 검증
-- [ ] T023 [P] [US1] `tests/components/SideNav.test.tsx` 갱신 — LogoutButton이 footer에 ThemeToggle과 나란히 렌더되는지
-- [ ] T024 [P] [US1] `tests/integration/auth-flow.test.tsx` — 가입 → `/main` 도착 → 로그아웃 → `/` 도착 → 재로그인 → `/main` (전체를 어댑터 모킹으로)
-- [ ] T025 [P] [US1] `tests/integration/route-guard.test.tsx` — 비인증 `/main` 요청 시 `/?redirect=/main`으로 리다이렉트, 인증 상태에서 `/` 요청 시 `/main`으로 — middleware 동작 검증
+- [X] T019 [P] [US1] `tests/components/AuthProvider.test.tsx` — 가입/로그인/로그아웃 성공·실패 경로 검증 (`@supabase/ssr` boundary 모킹). `loading` 상태 전이도 검증
+- [X] T020 [P] [US1] `tests/components/EmailPasswordForm.test.tsx` — 입력·제출(Enter 포함)·오류 표시·`aria-invalid` 토글 검증
+- [X] T021 [P] [US1] `tests/components/LoginScreen.test.tsx` 갱신 — 로그인/회원가입 탭 전환, 폼 마운트, AuthError 표시 (Google 버튼은 stub 처리)
+- [X] T022 [P] [US1] `tests/components/LogoutButton.test.tsx` — 클릭 시 `signOut` 호출되는지 검증
+- [X] T023 [P] [US1] `tests/components/SideNav.test.tsx` 갱신 — LogoutButton이 footer에 ThemeToggle과 나란히 렌더되는지
+- [X] T024 [P] [US1] `tests/integration/auth-flow.test.tsx` — 가입 → `/main` 도착 → 로그아웃 → `/` 도착 → 재로그인 → `/main` (전체를 어댑터 모킹으로)
+- [X] T025 [P] [US1] `tests/integration/route-guard.test.tsx` — 비인증 `/main` 요청 시 `/?redirect=/main`으로 리다이렉트, 인증 상태에서 `/` 요청 시 `/main`으로 — middleware 동작 검증
 
 ### Implementation for User Story 1
 
-- [ ] T026 [P] [US1] `src/context/AuthProvider.tsx` 작성 — `useAuth()`, `signInWithPassword`, `signUpWithPassword`, `signOut` 구현. `signInWithGoogle`은 본 phase에서 stub(throw 'not implemented')으로 두고 US4에서 채움
-- [ ] T027 [US1] `src/app/layout.tsx` 수정 — `<AuthProvider>` 트리 추가(기존 ThemeProvider/TasksProvider 외부에)
-- [ ] T028 [P] [US1] `src/components/login/EmailPasswordForm.tsx` 작성 — `mode: 'signin' | 'signup'` prop, `<form>` 시맨틱, `<label htmlFor>`, 최소 8자 검증, Enter 제출
-- [ ] T029 [P] [US1] `src/components/login/AuthError.tsx` 작성 — `role="alert"`, 한국어 메시지 표시
-- [ ] T030 [US1] `src/components/login/LoginScreen.tsx` 수정 — 탭 토글(state) + `EmailPasswordForm` + `AuthError` 통합. Google 버튼 자리는 placeholder div(US4에서 교체)
-- [ ] T031 [P] [US1] `src/components/shared/LogoutButton.tsx` 작성 — `useAuth().signOut` 호출, `aria-label="로그아웃"`, 키보드 포커스 가능
-- [ ] T032 [US1] `src/components/shared/SideNav.tsx` 수정 — footer에 `<LogoutButton />`을 `<ThemeToggle />` 옆에 추가 (T031 의존)
-- [ ] T033 [US1] `src/middleware.ts` 작성 — [contracts/routes.md §2](./contracts/routes.md#2-인증-가드--srcmiddlewarets) 코드 그대로. `getUser()` 사용, `getSession()` 금지. matcher에 정적 자원 제외
-- [ ] T034 [US1] `src/app/main/page.tsx` 임시 셸 — RSC에서 `createServerClient`로 `getUser()` 호출, 비인증 시 `redirect('/')`, 인증 시 빈 `TasksProvider` 셸 렌더 (실제 데이터 fetch는 US2에서 추가)
-- [ ] T035 [US1] `src/app/page.tsx` 수정 — 인증 상태에서는 middleware가 이미 `/main`으로 보내지만, 클라이언트 측 hydration에서도 `useAuth().user`가 있으면 `router.replace('/main')` (이중 가드)
+- [X] T026 [P] [US1] `src/context/AuthProvider.tsx` 작성 — `useAuth()`, `signInWithPassword`, `signUpWithPassword`, `signOut` 구현. `signInWithGoogle`은 본 phase에서 stub(throw 'not implemented')으로 두고 US4에서 채움
+- [X] T027 [US1] `src/app/layout.tsx` 수정 — `<AuthProvider>` 트리 추가(기존 ThemeProvider/TasksProvider 외부에)
+- [X] T028 [P] [US1] `src/components/login/EmailPasswordForm.tsx` 작성 — `mode: 'signin' | 'signup'` prop, `<form>` 시맨틱, `<label htmlFor>`, 최소 8자 검증, Enter 제출
+- [X] T029 [P] [US1] `src/components/login/AuthError.tsx` 작성 — `role="alert"`, 한국어 메시지 표시
+- [X] T030 [US1] `src/components/login/LoginScreen.tsx` 수정 — 탭 토글(state) + `EmailPasswordForm` + `AuthError` 통합. Google 버튼 자리는 placeholder div(US4에서 교체)
+- [X] T031 [P] [US1] `src/components/shared/LogoutButton.tsx` 작성 — `useAuth().signOut` 호출, `aria-label="로그아웃"`, 키보드 포커스 가능
+- [X] T032 [US1] `src/components/shared/SideNav.tsx` 수정 — footer에 `<LogoutButton />`을 `<ThemeToggle />` 옆에 추가 (T031 의존)
+- [X] T033 [US1] `src/middleware.ts` 작성 — [contracts/routes.md §2](./contracts/routes.md#2-인증-가드--srcmiddlewarets) 코드 그대로. `getUser()` 사용, `getSession()` 금지. matcher에 정적 자원 제외
+- [X] T034 [US1] `src/app/main/page.tsx` 임시 셸 — RSC에서 `createServerClient`로 `getUser()` 호출, 비인증 시 `redirect('/')`, 인증 시 빈 `TasksProvider` 셸 렌더 (실제 데이터 fetch는 US2에서 추가)
+- [X] T035 [US1] `src/app/page.tsx` 수정 — 인증 상태에서는 middleware가 이미 `/main`으로 보내지만, 클라이언트 측 hydration에서도 `useAuth().user`가 있으면 `router.replace('/main')` (이중 가드)
 
 **Checkpoint**: US1 fully functional. 가입·로그인·로그아웃·세션 유지·라우트 가드가 모두 동작한다. `/main`은 빈 상태로 보이지만 사이드 네비와 로그아웃 버튼은 정상 동작.
 

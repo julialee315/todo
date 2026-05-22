@@ -9,6 +9,10 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
+vi.mock('@/context/AuthProvider', () => ({
+  useAuth: () => ({ user: null, loading: false, signOut: vi.fn() }),
+}));
+
 function renderStats() {
   return render(
     <ThemeProvider>

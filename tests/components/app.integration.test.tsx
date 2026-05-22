@@ -17,6 +17,10 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: nav.push }),
 }));
 
+vi.mock('@/context/AuthProvider', () => ({
+  useAuth: () => ({ user: null, loading: false, signOut: vi.fn() }),
+}));
+
 beforeEach(() => {
   nav.params = new URLSearchParams();
   document.documentElement.removeAttribute('data-theme');
