@@ -3,7 +3,7 @@
 // stays deterministic and unit-testable.
 
 import type { CategoryId, Task, ViewId } from '@/lib/types';
-import { TODAY_KEY } from '@/lib/store/dates';
+import { todayKey } from '@/lib/store/dates';
 
 export type TaskAction =
   | {
@@ -33,7 +33,7 @@ export function tasksReducer(state: Task[], action: TaskAction): Task[] {
       const next: Task = {
         id: action.id,
         title,
-        due: action.view === 'upcoming' ? '2026-05-18' : TODAY_KEY,
+        due: action.view === 'upcoming' ? '2026-05-18' : todayKey(),
         priority: 'none',
         category: action.categoryHint ?? 'dev',
         starred: false,

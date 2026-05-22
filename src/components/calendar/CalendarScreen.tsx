@@ -9,7 +9,7 @@ import { SideNav } from '@/components/shared/SideNav';
 import { Icon } from '@/components/shared/Icon';
 import { useTasks } from '@/context/TasksProvider';
 import { CAT_BY_ID, PRIO_BY_ID } from '@/lib/store/sample-data';
-import { TODAY_KEY, fmtDay, fmtKey, parseKey } from '@/lib/store/dates';
+import { todayKey, fmtDay, fmtKey, parseKey } from '@/lib/store/dates';
 
 const MONTH_NAMES = [
   '1월', '2월', '3월', '4월', '5월', '6월',
@@ -41,7 +41,7 @@ export function CalendarScreen() {
         date: d,
         key: k,
         inMonth: d.getMonth() === monthIdx,
-        isToday: k === TODAY_KEY,
+        isToday: k === todayKey(),
         events: tasks.filter((t) => t.due === k),
       });
     }

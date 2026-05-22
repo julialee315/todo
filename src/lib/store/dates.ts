@@ -1,12 +1,21 @@
-// Pure date helpers. "Today" is pinned to 2026-05-15 so relative-date logic
-// and the seed data stay deterministic, exactly as the handoff bundle does.
+// Pure date helpers. "Today" was a fixed 2026-05-15 constant in Feature 001
+// (prototype demo day). Feature 002 swaps it for the real system clock so the
+// cloud app reflects actual time. Tests pin the clock via vi.setSystemTime in
+// tests/setup.ts to keep assertions deterministic.
 
 import type { Task } from '@/lib/types';
 
-export const TODAY = new Date(2026, 4, 15); // Fri, May 15 2026
-export const TODAY_KEY = '2026-05-15';
-
 const DOWS = ['일', '월', '화', '수', '목', '금', '토'];
+
+/** Wall-clock "today" — a fresh Date on every call. */
+export function today(): Date {
+  return new Date();
+}
+
+/** Wall-clock "today" formatted as 'YYYY-MM-DD' (local). */
+export function todayKey(): string {
+  return fmtKey(today());
+}
 
 /** Parse a 'YYYY-MM-DD' key as a LOCAL date (avoids the UTC-midnight shift
  *  that `new Date('YYYY-MM-DD')` introduces in negative-offset timezones). */
@@ -30,7 +39,7 @@ export function fmtKey(d: Date): string {
 export function relDay(key: string): string | null {
   if (!key) return null;
   const d = parseKey(key);
-  const diff = Math.round((d.getTime() - TODAY.getTime()) / 86400000);
+  const diff = Math.round((d.getTime() - today().getTime()) / 86400000);
   if (diff === 0) return '오늘';
   if (diff === 1) return '내일';
   if (diff === -1) return '어제';
@@ -41,13 +50,13 @@ export function relDay(key: string): string | null {
 
 export function isOverdue(t: Task): boolean {
   if (!t.due || t.done) return false;
-  return t.due < TODAY_KEY;
+  return t.due < todayKey();
 }
 
 export function isToday(t: Task): boolean {
-  return t.due === TODAY_KEY;
+  return t.due === todayKey();
 }
 
 export function isUpcoming(t: Task): boolean {
-  return Boolean(t.due) && t.due > TODAY_KEY;
+  return Boolean(t.due) && t.due > todayKey();
 }

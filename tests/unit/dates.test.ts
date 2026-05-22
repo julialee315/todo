@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  TODAY,
-  TODAY_KEY,
+  today,
+  todayKey,
   fmtDay,
   fmtKey,
   relDay,
@@ -26,15 +26,20 @@ function task(due: string, done = false): Task {
   };
 }
 
-describe('TODAY is pinned to 2026-05-15', () => {
-  it('TODAY is May 15 2026 (local)', () => {
-    expect(TODAY.getFullYear()).toBe(2026);
-    expect(TODAY.getMonth()).toBe(4);
-    expect(TODAY.getDate()).toBe(15);
+// "today" now comes from the real system clock; tests/setup.ts pins it to
+// 2026-05-15 via vi.setSystemTime so every assertion below behaves like the
+// pre-cloud TODAY constant did.
+
+describe('today() / todayKey() resolve to the pinned test clock', () => {
+  it('today() returns May 15 2026 (local) under tests/setup.ts', () => {
+    const d = today();
+    expect(d.getFullYear()).toBe(2026);
+    expect(d.getMonth()).toBe(4);
+    expect(d.getDate()).toBe(15);
   });
 
-  it('TODAY_KEY matches', () => {
-    expect(TODAY_KEY).toBe('2026-05-15');
+  it('todayKey() matches', () => {
+    expect(todayKey()).toBe('2026-05-15');
   });
 });
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { tasksReducer } from '@/lib/store/reducer';
-import { TODAY_KEY } from '@/lib/store/dates';
+import { todayKey } from '@/lib/store/dates';
 import type { Task } from '@/lib/types';
 
 function fixture(): Task[] {
@@ -43,7 +43,7 @@ describe('reducer: add', () => {
     expect(next[0]).toEqual({
       id: 'new1',
       title: '새 할 일',
-      due: TODAY_KEY,
+      due: todayKey(),
       priority: 'none',
       category: 'dev',
       starred: false,
@@ -72,7 +72,7 @@ describe('reducer: add', () => {
       categoryHint: null,
       view: 'upcoming',
     });
-    expect(next[0].due > TODAY_KEY).toBe(true);
+    expect(next[0].due > todayKey()).toBe(true);
   });
 
   it('ignores blank titles (no state change)', () => {
