@@ -1,5 +1,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/001-todo-app/plan.md`
+`specs/002-cloud-sync-multiuser/plan.md`
 <!-- SPECKIT END -->
