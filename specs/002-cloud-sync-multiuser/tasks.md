@@ -62,7 +62,7 @@ description: "다중 사용자 클라우드 동기화 Todo — task 분해"
 - [X] T015 `src/lib/store/dates.ts` 수정 — `TODAY` 상수와 `TODAY_KEY` 상수를 `today(): Date`와 `todayKey(): string` 함수로 교체. `relDay`/`isOverdue`/`isToday`/`isUpcoming` 등 모든 내부 호출 갱신
 - [X] T016 `src/lib/store/selectors.ts` 호출부 갱신 — `TODAY` → `today()`, `TODAY_KEY` → `todayKey()` (로직 변경 없음, 호출 형태만)
 - [X] T017 [P] `tests/unit/selectors.test.ts` 실행해 setSystemTime 하에 기존 검증 모두 통과하는지 확인 (필요 시 fixture 보정)
-- [ ] T018 `src/lib/store/persistence.ts` 제거 + `tests/unit/persistence.test.ts` 제거 — 어댑터 계층이 영속성을 인수 ([store-api.md §10](./contracts/store-api.md)). **DEFERRED to US2 (T050~T053)**: 단독 제거 시 `TasksProvider`의 `loadTasks/saveTasks` 임포트가 깨지므로 TasksProvider를 어댑터로 재배선할 때 함께 제거.
+- [X] T018 `src/lib/store/persistence.ts` 제거 + `tests/unit/persistence.test.ts` 제거 — 어댑터 계층이 영속성을 인수 ([store-api.md §10](./contracts/store-api.md)). **DEFERRED to US2 (T050~T053)**: 단독 제거 시 `TasksProvider`의 `loadTasks/saveTasks` 임포트가 깨지므로 TasksProvider를 어댑터로 재배선할 때 함께 제거.
 
 **Checkpoint**: Foundation 완료. T011~T018의 작업이 모든 user story에 깔려 있고, US1~US4가 병렬로 시작 가능.
 
@@ -109,27 +109,27 @@ description: "다중 사용자 클라우드 동기화 Todo — task 분해"
 
 ### Tests for User Story 2 (write FIRST, ensure FAIL) ⚠️
 
-- [ ] T036 [P] [US2] `tests/unit/supabase-store/seed.test.ts` — `ensureSeed` 멱등 동작: `seeded_at IS NULL` → 14건 INSERT + subs INSERT + `seeded_at = now()`; 이미 시드됨 → no-op; 동시 호출 경합 → 한쪽 성공·다른쪽 catch 후 무시
-- [ ] T037 [P] [US2] `tests/unit/supabase-store/tasks-repo.test.ts` — `listTasksForUser`가 tasks + subtasks 두 fetch를 메모리 join, `created_at DESC` 정렬, sub들은 `sort_order ASC`
-- [ ] T038 [P] [US2] `tests/unit/supabase-store/tasks-mutations.test.ts` — `addTask`(공백만 → throw), `updateTask`(빈 patch → no-op), `deleteTask`(0행 영향 → throw), `toggleTaskDone`, `toggleTaskStarred`
-- [ ] T039 [P] [US2] `tests/unit/supabase-store/subtasks.test.ts` — `addSubtask`(sort_order = max+1), `updateSubtask`, `deleteSubtask`, `reorderSubtasks`(트랜잭션 한 번)
-- [ ] T040 [P] [US2] `tests/unit/supabase-store/preferences.test.ts` — `savePreference` upsert가 `user_id` 명시하지 않고 RLS WITH CHECK에 의존
-- [ ] T041 [P] [US2] `tests/components/TasksProvider.test.tsx` 갱신 — 어댑터 모킹, 사용자 동작 → mutation 호출 + dispatch 검증. 초기 hydrate prop 동작
-- [ ] T042 [P] [US2] `tests/components/ThemeProvider.test.tsx` 갱신 — 테마 토글 시 `savePreference({ theme })` 호출
-- [ ] T043 [P] [US2] `tests/integration/cloud-data-isolation.test.tsx` — 사용자 A로 task INSERT 후, B 세션에서 같은 task ID로 select/update/delete 시 0행 — 어댑터에서 RLS 응답 모킹
-- [ ] T044 [P] [US2] `tests/integration/offline-cache.test.tsx` — `navigator.onLine = false`로 둔 상태에서 마지막 `lastSyncedSnapshot`이 화면에 표시되고, 모든 mutation 버튼이 disabled + 토스트 표시
+- [X] T036 [P] [US2] `tests/unit/supabase-store/seed.test.ts` — `ensureSeed` 멱등 동작: `seeded_at IS NULL` → 14건 INSERT + subs INSERT + `seeded_at = now()`; 이미 시드됨 → no-op; 동시 호출 경합 → 한쪽 성공·다른쪽 catch 후 무시
+- [X] T037 [P] [US2] `tests/unit/supabase-store/tasks-repo.test.ts` — `listTasksForUser`가 tasks + subtasks 두 fetch를 메모리 join, `created_at DESC` 정렬, sub들은 `sort_order ASC`
+- [X] T038 [P] [US2] `tests/unit/supabase-store/tasks-mutations.test.ts` — `addTask`(공백만 → throw), `updateTask`(빈 patch → no-op), `deleteTask`(0행 영향 → throw), `toggleTaskDone`, `toggleTaskStarred`
+- [X] T039 [P] [US2] `tests/unit/supabase-store/subtasks.test.ts` — `addSubtask`(sort_order = max+1), `updateSubtask`, `deleteSubtask`, `reorderSubtasks`(트랜잭션 한 번)
+- [X] T040 [P] [US2] `tests/unit/supabase-store/preferences.test.ts` — `savePreference` upsert가 `user_id` 명시하지 않고 RLS WITH CHECK에 의존
+- [X] T041 [P] [US2] `tests/components/TasksProvider.test.tsx` 갱신 — 어댑터 모킹, 사용자 동작 → mutation 호출 + dispatch 검증. 초기 hydrate prop 동작
+- [X] T042 [P] [US2] `tests/components/ThemeProvider.test.tsx` 갱신 — 테마 토글 시 `savePreference({ theme })` 호출
+- [X] T043 [P] [US2] `tests/integration/cloud-data-isolation.test.tsx` — 사용자 A로 task INSERT 후, B 세션에서 같은 task ID로 select/update/delete 시 0행 — 어댑터에서 RLS 응답 모킹
+- [X] T044 [P] [US2] `tests/integration/offline-cache.test.tsx` — `navigator.onLine = false`로 둔 상태에서 마지막 `lastSyncedSnapshot`이 화면에 표시되고, 모든 mutation 버튼이 disabled + 토스트 표시
 
 ### Implementation for User Story 2
 
-- [ ] T045 [P] [US2] `src/lib/supabase-store/seed.ts` — `ensureSeed(userId)` — [db-schema.md §5 시드 수입 패턴](./contracts/db-schema.md#5-시드-수입-패턴) 그대로
-- [ ] T046 [P] [US2] `src/lib/supabase-store/tasks-repo.server.ts` — `listTasksForUser`, `getTaskById`, `loadPreferences`. 호출 전 `ensureSeed` 자동 호출(멱등이라 안전)
-- [ ] T047 [P] [US2] `src/lib/supabase-store/tasks-mutations.ts` — `addTask`/`updateTask`/`deleteTask`/`toggleTaskDone`/`toggleTaskStarred` ([store-api.md §3](./contracts/store-api.md))
-- [ ] T048 [P] [US2] `src/lib/supabase-store/subtasks.ts` — `addSubtask`/`updateSubtask`/`deleteSubtask`/`reorderSubtasks`
-- [ ] T049 [P] [US2] `src/lib/supabase-store/preferences.ts` — `savePreference(patch)` upsert
-- [ ] T050 [US2] `src/app/main/page.tsx` 갱신 (T034 위에) — `listTasksForUser` + `loadPreferences` 호출 후 결과를 `<TasksProvider initialTasks={...} initialPrefs={...}>` props로 hydrate
-- [ ] T051 [US2] `src/context/TasksProvider.tsx` 갱신 — (a) initialTasks/initialPrefs prop으로 useReducer lazy init, (b) 모든 mutation 핸들러를 어댑터 호출로 위임, (c) 성공한 fetch는 `localStorage.lastSyncedSnapshot`에 캐시
-- [ ] T052 [US2] `src/context/ThemeProvider.tsx` 갱신 — `setTheme` 호출 시 `savePreference({ theme })` 호출 + 로컬 state 갱신
-- [ ] T053 [US2] 오프라인 핸들링 — `TasksProvider`에 `navigator.onLine` 리스너, 오프라인이면 mutation 함수들이 즉시 throw + 토스트 컴포넌트로 안내. 화면은 캐시된 마지막 snapshot 표시
+- [X] T045 [P] [US2] `src/lib/supabase-store/seed.ts` — `ensureSeed(userId)` — [db-schema.md §5 시드 수입 패턴](./contracts/db-schema.md#5-시드-수입-패턴) 그대로
+- [X] T046 [P] [US2] `src/lib/supabase-store/tasks-repo.server.ts` — `listTasksForUser`, `getTaskById`, `loadPreferences`. 호출 전 `ensureSeed` 자동 호출(멱등이라 안전)
+- [X] T047 [P] [US2] `src/lib/supabase-store/tasks-mutations.ts` — `addTask`/`updateTask`/`deleteTask`/`toggleTaskDone`/`toggleTaskStarred` ([store-api.md §3](./contracts/store-api.md))
+- [X] T048 [P] [US2] `src/lib/supabase-store/subtasks.ts` — `addSubtask`/`updateSubtask`/`deleteSubtask`/`reorderSubtasks`
+- [X] T049 [P] [US2] `src/lib/supabase-store/preferences.ts` — `savePreference(patch)` upsert
+- [X] T050 [US2] `src/app/main/page.tsx` 갱신 (T034 위에) — `listTasksForUser` + `loadPreferences` 호출 후 결과를 `<TasksProvider initialTasks={...} initialPrefs={...}>` props로 hydrate
+- [X] T051 [US2] `src/context/TasksProvider.tsx` 갱신 — (a) initialTasks/initialPrefs prop으로 useReducer lazy init, (b) 모든 mutation 핸들러를 어댑터 호출로 위임, (c) 성공한 fetch는 `localStorage.lastSyncedSnapshot`에 캐시
+- [X] T052 [US2] `src/context/ThemeProvider.tsx` 갱신 — `setTheme` 호출 시 `savePreference({ theme })` 호출 + 로컬 state 갱신
+- [X] T053 [US2] 오프라인 핸들링 — `TasksProvider`에 `navigator.onLine` 리스너, 오프라인이면 mutation 함수들이 즉시 throw + 토스트 컴포넌트로 안내. 화면은 캐시된 마지막 snapshot 표시
 
 **Checkpoint**: US1 + US2 모두 동작. 두 사용자가 격리되고, 첫 로그인 시드가 채워지고, 모든 CRUD가 클라우드에 즉시 반영. 같은 계정으로 다른 브라우저 로그인 시 같은 상태.
 

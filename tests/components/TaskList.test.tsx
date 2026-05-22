@@ -1,6 +1,22 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+vi.mock('@/context/AuthProvider', () => ({
+  useAuth: () => ({ user: { id: 'u', email: 'x' }, loading: false, signOut: vi.fn() }),
+}));
+vi.mock('@/context/TasksProvider', async () => {
+  const { SAMPLE_TASKS } = await import('@/lib/store/sample-data');
+  const fake = await import('../helpers/fake-providers');
+  return {
+    TasksProvider: ({ children }: { children: React.ReactNode }) => (
+      <fake.FakeTasksProvider initialTasks={SAMPLE_TASKS}>
+        {children}
+      </fake.FakeTasksProvider>
+    ),
+    useTasks: fake.useFakeTasks,
+  };
+});
+
 import { TaskList } from '@/components/main/TaskList';
 import { TasksProvider } from '@/context/TasksProvider';
 import type { CategoryId, ViewId } from '@/lib/types';

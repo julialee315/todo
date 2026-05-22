@@ -1,6 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+
+// Use the React-state-backed FakeThemeProvider so the toggle re-renders
+// after click — and so state resets between tests (fresh render = fresh state).
+vi.mock('@/context/ThemeProvider', async () => {
+  const fake = await import('../helpers/fake-providers');
+  return {
+    ThemeProvider: ({ children }: { children: React.ReactNode }) => (
+      <fake.FakeThemeProvider>{children}</fake.FakeThemeProvider>
+    ),
+    useTheme: fake.useFakeTheme,
+  };
+});
+
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { ThemeProvider } from '@/context/ThemeProvider';
 

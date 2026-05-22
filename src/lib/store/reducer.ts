@@ -1,23 +1,22 @@
 // Pure task reducer: same input → same output, never mutates its input.
-// IDs are generated outside the reducer (carried in the action payload) so it
-// stays deterministic and unit-testable.
+//
+// Feature 002 change: the `add` and `addSub` actions now carry an already-
+// constructed Task / Subtask (with the server-generated id). Title trimming,
+// default due dates, and id generation now live in TasksProvider, which talks
+// to the Supabase adapter before dispatching. This lets the same action
+// shape carry both local writes (round-trip through the adapter) and remote
+// pushes (US3 realtime).
 
-import type { CategoryId, Task, ViewId } from '@/lib/types';
-import { todayKey } from '@/lib/store/dates';
+import type { Subtask, Task } from '@/lib/types';
 
 export type TaskAction =
-  | {
-      type: 'add';
-      id: string;
-      title: string;
-      categoryHint: CategoryId | null;
-      view: ViewId;
-    }
+  | { type: 'add'; task: Task }
   | { type: 'update'; id: string; patch: Partial<Task> }
   | { type: 'delete'; id: string }
   | { type: 'toggleDone'; id: string }
   | { type: 'toggleStar'; id: string }
-  | { type: 'addSub'; taskId: string; subId: string; text: string }
+  | { type: 'addSub'; taskId: string; sub: Subtask }
+  | { type: 'updateSub'; taskId: string; subId: string; patch: Partial<Subtask> }
   | { type: 'toggleSub'; taskId: string; subId: string }
   | { type: 'deleteSub'; taskId: string; subId: string }
   | { type: 'hydrate'; tasks: Task[] };
@@ -27,22 +26,11 @@ export function tasksReducer(state: Task[], action: TaskAction): Task[] {
     case 'hydrate':
       return action.tasks;
 
-    case 'add': {
-      const title = action.title.trim();
-      if (!title) return state;
-      const next: Task = {
-        id: action.id,
-        title,
-        due: action.view === 'upcoming' ? '2026-05-18' : todayKey(),
-        priority: 'none',
-        category: action.categoryHint ?? 'dev',
-        starred: false,
-        done: false,
-        notes: '',
-        subs: [],
-      };
-      return [next, ...state];
-    }
+    case 'add':
+      // If a task with the same id is already present (e.g. realtime echo of
+      // our own insert), keep state stable.
+      if (state.some((t) => t.id === action.task.id)) return state;
+      return [action.task, ...state];
 
     case 'update': {
       if (!state.some((t) => t.id === action.id)) return state;
@@ -65,14 +53,29 @@ export function tasksReducer(state: Task[], action: TaskAction): Task[] {
       );
 
     case 'addSub': {
-      const text = action.text.trim();
-      if (!text) return state;
+      const target = state.find((t) => t.id === action.taskId);
+      if (!target) return state;
+      // Echo dedupe: if this sub id already exists on the parent, no-op
+      // (keeps the same state reference so downstream selectors don't churn).
+      if (target.subs.some((s) => s.id === action.sub.id)) return state;
       return state.map((t) =>
         t.id === action.taskId
-          ? { ...t, subs: [...t.subs, { id: action.subId, text, done: false }] }
+          ? { ...t, subs: [...t.subs, action.sub] }
           : t,
       );
     }
+
+    case 'updateSub':
+      return state.map((t) =>
+        t.id === action.taskId
+          ? {
+              ...t,
+              subs: t.subs.map((s) =>
+                s.id === action.subId ? { ...s, ...action.patch } : s,
+              ),
+            }
+          : t,
+      );
 
     case 'toggleSub':
       return state.map((t) =>

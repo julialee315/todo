@@ -12,6 +12,14 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.{test,spec}.{ts,tsx}'],
+    // Placeholders so `createClient()` from @supabase/ssr doesn't throw in
+    // tests that import a module that constructs it eagerly. Tests that
+    // verify Supabase behaviour mock '@/utils/supabase/client' anyway, so
+    // these values are never used to make real calls.
+    env: {
+      NEXT_PUBLIC_SUPABASE_URL: 'https://placeholder.supabase.co',
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_placeholder',
+    },
   },
   resolve: {
     alias: {

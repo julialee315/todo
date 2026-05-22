@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { tasksReducer } from '@/lib/store/reducer';
-import { todayKey } from '@/lib/store/dates';
-import type { Task } from '@/lib/types';
+import type { Subtask, Task } from '@/lib/types';
 
 function fixture(): Task[] {
   return [
@@ -30,56 +29,33 @@ function fixture(): Task[] {
   ];
 }
 
-describe('reducer: add', () => {
-  it('inserts a new task at the front with defaults', () => {
-    const next = tasksReducer(fixture(), {
-      type: 'add',
-      id: 'new1',
-      title: '  새 할 일  ',
-      categoryHint: null,
-      view: 'today',
-    });
+function newTask(id: string, overrides: Partial<Task> = {}): Task {
+  return {
+    id,
+    title: 'fresh',
+    due: '',
+    priority: 'none',
+    category: 'dev',
+    starred: false,
+    done: false,
+    notes: '',
+    subs: [],
+    ...overrides,
+  };
+}
+
+describe('reducer: add (Feature 002 — receives a server-shaped Task)', () => {
+  it('inserts the carried task at the front', () => {
+    const t = newTask('new1', { title: '서버 응답 제목' });
+    const next = tasksReducer(fixture(), { type: 'add', task: t });
     expect(next).toHaveLength(3);
-    expect(next[0]).toEqual({
-      id: 'new1',
-      title: '새 할 일',
-      due: todayKey(),
-      priority: 'none',
-      category: 'dev',
-      starred: false,
-      done: false,
-      notes: '',
-      subs: [],
-    });
+    expect(next[0]).toBe(t);
   });
 
-  it('uses the category hint when provided', () => {
-    const next = tasksReducer(fixture(), {
-      type: 'add',
-      id: 'n',
-      title: 'x',
-      categoryHint: 'design',
-      view: 'inbox',
-    });
-    expect(next[0].category).toBe('design');
-  });
-
-  it('gives upcoming-view additions a future due date', () => {
-    const next = tasksReducer(fixture(), {
-      type: 'add',
-      id: 'n',
-      title: 'x',
-      categoryHint: null,
-      view: 'upcoming',
-    });
-    expect(next[0].due > todayKey()).toBe(true);
-  });
-
-  it('ignores blank titles (no state change)', () => {
+  it('is idempotent — adding a task whose id already exists returns the same state ref', () => {
     const state = fixture();
-    expect(tasksReducer(state, {
-      type: 'add', id: 'n', title: '   ', categoryHint: null, view: 'today',
-    })).toBe(state);
+    const dup = newTask('t1', { title: 'echo of an existing task' });
+    expect(tasksReducer(state, { type: 'add', task: dup })).toBe(state);
   });
 });
 
@@ -122,22 +98,36 @@ describe('reducer: toggles', () => {
 });
 
 describe('reducer: subtasks', () => {
-  it('addSub appends a subtask', () => {
+  it('addSub appends the carried sub', () => {
+    const sub: Subtask = { id: 's9', text: '새 서브', done: false };
     const next = tasksReducer(fixture(), {
       type: 'addSub',
       taskId: 't1',
-      subId: 's9',
-      text: '  새 서브  ',
+      sub,
     });
     expect(next[0].subs).toHaveLength(2);
-    expect(next[0].subs[1]).toEqual({ id: 's9', text: '새 서브', done: false });
+    expect(next[0].subs[1]).toBe(sub);
   });
 
-  it('addSub ignores blank text', () => {
+  it('addSub is idempotent — duplicate sub id is dropped', () => {
     const state = fixture();
     expect(
-      tasksReducer(state, { type: 'addSub', taskId: 't1', subId: 's9', text: '  ' }),
+      tasksReducer(state, {
+        type: 'addSub',
+        taskId: 't1',
+        sub: { id: 's1', text: 'echo', done: false },
+      }),
     ).toBe(state);
+  });
+
+  it('updateSub merges a patch into the matching sub', () => {
+    const next = tasksReducer(fixture(), {
+      type: 'updateSub',
+      taskId: 't1',
+      subId: 's1',
+      patch: { text: 'edited' },
+    });
+    expect(next[0].subs[0]).toEqual({ id: 's1', text: 'edited', done: false });
   });
 
   it('toggleSub flips a subtask done', () => {
@@ -160,20 +150,8 @@ describe('reducer: subtasks', () => {
 });
 
 describe('reducer: hydrate', () => {
-  it('replaces the whole list (used to load persisted state after mount)', () => {
-    const loaded: Task[] = [
-      {
-        id: 'L1',
-        title: 'loaded',
-        due: '',
-        priority: 'none',
-        category: 'dev',
-        starred: false,
-        done: false,
-        notes: '',
-        subs: [],
-      },
-    ];
+  it('replaces the whole list (used to load fetched state after mount)', () => {
+    const loaded: Task[] = [newTask('L1', { title: 'loaded' })];
     expect(tasksReducer(fixture(), { type: 'hydrate', tasks: loaded })).toBe(
       loaded,
     );
@@ -186,7 +164,11 @@ describe('reducer: purity', () => {
     const snapshot = JSON.parse(JSON.stringify(state));
     tasksReducer(state, { type: 'toggleDone', id: 't1' });
     tasksReducer(state, { type: 'update', id: 't1', patch: { title: 'z' } });
-    tasksReducer(state, { type: 'addSub', taskId: 't1', subId: 's2', text: 'y' });
+    tasksReducer(state, {
+      type: 'addSub',
+      taskId: 't1',
+      sub: { id: 's2', text: 'y', done: false },
+    });
     expect(state).toEqual(snapshot);
   });
 });

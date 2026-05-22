@@ -20,6 +20,29 @@ vi.mock('@/context/AuthProvider', () => ({
   useAuth: () => ({ user: null, loading: false, signOut: vi.fn() }),
 }));
 
+vi.mock('@/context/TasksProvider', async () => {
+  const { SAMPLE_TASKS } = await import('@/lib/store/sample-data');
+  const fake = await import('../helpers/fake-providers');
+  return {
+    TasksProvider: ({ children }: { children: React.ReactNode }) => (
+      <fake.FakeTasksProvider initialTasks={SAMPLE_TASKS}>
+        {children}
+      </fake.FakeTasksProvider>
+    ),
+    useTasks: fake.useFakeTasks,
+  };
+});
+
+vi.mock('@/context/ThemeProvider', async () => {
+  const fake = await import('../helpers/fake-providers');
+  return {
+    ThemeProvider: ({ children }: { children: React.ReactNode }) => (
+      <fake.FakeThemeProvider>{children}</fake.FakeThemeProvider>
+    ),
+    useTheme: fake.useFakeTheme,
+  };
+});
+
 beforeEach(() => {
   nav.params = new URLSearchParams();
   nav.push.mockClear();

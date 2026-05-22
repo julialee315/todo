@@ -8,6 +8,32 @@ vi.mock('@/context/AuthProvider', () => ({
   useAuth: () => ({ signOut, user: null, loading: false }),
 }));
 
+// The real cloud-driven Providers would start empty until an authenticated
+// fetch lands; for screen tests we substitute in-memory fakes seeded with
+// SAMPLE_TASKS so the existing assertions keep working.
+vi.mock('@/context/TasksProvider', async () => {
+  const { SAMPLE_TASKS } = await import('@/lib/store/sample-data');
+  const fake = await import('../helpers/fake-providers');
+  return {
+    TasksProvider: ({ children }: { children: React.ReactNode }) => (
+      <fake.FakeTasksProvider initialTasks={SAMPLE_TASKS}>
+        {children}
+      </fake.FakeTasksProvider>
+    ),
+    useTasks: fake.useFakeTasks,
+  };
+});
+
+vi.mock('@/context/ThemeProvider', async () => {
+  const fake = await import('../helpers/fake-providers');
+  return {
+    ThemeProvider: ({ children }: { children: React.ReactNode }) => (
+      <fake.FakeThemeProvider>{children}</fake.FakeThemeProvider>
+    ),
+    useTheme: fake.useFakeTheme,
+  };
+});
+
 import { SideNav } from '@/components/shared/SideNav';
 import { TasksProvider } from '@/context/TasksProvider';
 import { ThemeProvider } from '@/context/ThemeProvider';
