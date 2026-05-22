@@ -25,6 +25,8 @@ import { createClient } from '@/utils/supabase/client';
 import { useAuth } from '@/context/AuthProvider';
 import { loadPreferences } from '@/lib/supabase-store/tasks-repo';
 import { savePreference } from '@/lib/supabase-store/preferences';
+import { subscribeToUserChanges } from '@/lib/supabase-store/realtime';
+import type { DbPreferenceRow } from '@/lib/types';
 
 const THEME_CACHE_KEY = 'demodev-tasks:theme';
 
@@ -89,6 +91,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
+  }, [user, supabase]);
+
+  // Realtime: when a sibling session updates user_preferences, mirror the
+  // theme into this tab. We use the same prev-theme guard below so this
+  // remote setTheme doesn't echo back as a write.
+  useEffect(() => {
+    if (!user) return;
+    const stop = subscribeToUserChanges(supabase, user.id, (change) => {
+      if (change.table !== 'user_preferences') return;
+      const row = change.new as DbPreferenceRow | null;
+      if (row?.theme && row.theme !== prevTheme.current) {
+        setTheme(row.theme);
+      }
+    });
+    return stop;
   }, [user, supabase]);
 
   // Mirror to <html data-theme> on every change, write the cache, and (if

@@ -143,17 +143,17 @@ description: "다중 사용자 클라우드 동기화 Todo — task 분해"
 
 ### Tests for User Story 3 (write FIRST, ensure FAIL) ⚠️
 
-- [ ] T054 [P] [US3] `tests/unit/supabase-store/realtime.test.ts` — `subscribeToUserChanges`가 단일 채널에 세 테이블 핸들러 바인딩, `user_id=eq.${userId}` 필터, postgres_changes 페이로드 → `RealtimeChange` 변환, unsubscribe 동작
-- [ ] T055 [P] [US3] `tests/unit/reducer.test.ts` 확장 — `remote/applyChange` 액션이 INSERT/UPDATE/DELETE 모두 멱등하게 흡수 (자기 echo 무시)
-- [ ] T056 [P] [US3] `tests/integration/tasks-sync.test.tsx` — 두 `createBrowserClient` 인스턴스 모킹 + 채널 이벤트 발생 → 다른 인스턴스의 reducer가 변경 반영 (2초 이내, fake timer)
-- [ ] T057 [P] [US3] `tests/integration/conflict-lww.test.tsx` — 같은 task에 두 동시 update → 양쪽 채널이 더 늦은 값으로 수렴
+- [X] T054 [P] [US3] `tests/unit/supabase-store/realtime.test.ts` — `subscribeToUserChanges`가 단일 채널에 세 테이블 핸들러 바인딩, `user_id=eq.${userId}` 필터, postgres_changes 페이로드 → `RealtimeChange` 변환, unsubscribe 동작
+- [X] T055 [P] [US3] `tests/unit/reducer.test.ts` 확장 — `remote/applyChange` 액션이 INSERT/UPDATE/DELETE 모두 멱등하게 흡수 (자기 echo 무시)
+- [X] T056 [P] [US3] `tests/integration/tasks-sync.test.tsx` — 두 `createBrowserClient` 인스턴스 모킹 + 채널 이벤트 발생 → 다른 인스턴스의 reducer가 변경 반영 (2초 이내, fake timer)
+- [X] T057 [P] [US3] `tests/integration/conflict-lww.test.tsx` — 같은 task에 두 동시 update → 양쪽 채널이 더 늦은 값으로 수렴
 
 ### Implementation for User Story 3
 
-- [ ] T058 [P] [US3] `src/lib/supabase-store/realtime.ts` — `subscribeToUserChanges(userId, onChange)` ([contracts/realtime.md](./contracts/realtime.md) §1·2)
-- [ ] T059 [US3] `src/lib/store/reducer.ts`에 `remote/applyChange` 액션 추가 — `event`·`table`·`new`·`old`를 받아 멱등하게 적용. 같은 상태면 동일 reference 반환(불필요한 re-render 방지)
-- [ ] T060 [US3] `src/context/TasksProvider.tsx` 갱신 — `useEffect`에서 `subscribeToUserChanges(user.id, dispatchRemote)`, cleanup으로 unsubscribe. 의존성에 `user.id` (사용자 전환 시 재구독)
-- [ ] T061 [US3] `src/context/ThemeProvider.tsx` 갱신 — `user_preferences` 변경 push 시 `theme`·`view`·`sort` 동기
+- [X] T058 [P] [US3] `src/lib/supabase-store/realtime.ts` — `subscribeToUserChanges(userId, onChange)` ([contracts/realtime.md](./contracts/realtime.md) §1·2)
+- [X] T059 [US3] `src/lib/store/reducer.ts`에 `remote/applyChange` 액션 추가 — `event`·`table`·`new`·`old`를 받아 멱등하게 적용. 같은 상태면 동일 reference 반환(불필요한 re-render 방지)
+- [X] T060 [US3] `src/context/TasksProvider.tsx` 갱신 — `useEffect`에서 `subscribeToUserChanges(user.id, dispatchRemote)`, cleanup으로 unsubscribe. 의존성에 `user.id` (사용자 전환 시 재구독)
+- [X] T061 [US3] `src/context/ThemeProvider.tsx` 갱신 — `user_preferences` 변경 push 시 `theme`·`view`·`sort` 동기
 
 **Checkpoint**: 두 탭으로 시연 가능. 한쪽 추가/수정/삭제가 < 2초에 다른쪽 반영. 동시 충돌은 LWW로 수렴.
 
@@ -171,18 +171,18 @@ description: "다중 사용자 클라우드 동기화 Todo — task 분해"
 
 ### Tests for User Story 4 (write FIRST, ensure FAIL) ⚠️
 
-- [ ] T063 [P] [US4] `tests/components/GoogleButton.test.tsx` — 클릭 → `signInWithGoogle` 호출. `aria-label="Google로 계속하기"`, 키보드 포커스 가능
-- [ ] T064 [P] [US4] `tests/components/LoginScreen.test.tsx` 추가 — Google 버튼이 이메일 폼과 함께 노출, "또는" 구분선 시맨틱
-- [ ] T065 [P] [US4] `tests/integration/oauth-callback.test.tsx` — `/auth/callback?code=...` 핸들러 호출 → `exchangeCodeForSession` 모킹 성공 시 `/main` 리다이렉트, 실패 시 `/?error=...`
-- [ ] T066 [P] [US4] `tests/components/AuthProvider.test.tsx` 추가 — `signInWithGoogle` 호출이 `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: '/auth/callback' } })`로 위임
+- [X] T063 [P] [US4] `tests/components/GoogleButton.test.tsx` — 클릭 → `signInWithGoogle` 호출. `aria-label="Google로 계속하기"`, 키보드 포커스 가능
+- [X] T064 [P] [US4] `tests/components/LoginScreen.test.tsx` 추가 — Google 버튼이 이메일 폼과 함께 노출, "또는" 구분선 시맨틱
+- [X] T065 [P] [US4] `tests/integration/oauth-callback.test.tsx` — `/auth/callback?code=...` 핸들러 호출 → `exchangeCodeForSession` 모킹 성공 시 `/main` 리다이렉트, 실패 시 `/?error=...`
+- [X] T066 [P] [US4] `tests/components/AuthProvider.test.tsx` 추가 — `signInWithGoogle` 호출이 `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: '/auth/callback' } })`로 위임
 
 ### Implementation for User Story 4
 
-- [ ] T067 [P] [US4] `src/components/login/GoogleButton.tsx` 작성 — 디자인 토큰 사용, `aria-label`, `useAuth().signInWithGoogle` 호출
-- [ ] T068 [US4] `src/context/AuthProvider.tsx` 갱신 — T026의 stub을 실제 구현으로 교체 (`signInWithOAuth` 호출)
-- [ ] T069 [US4] `src/app/auth/callback/route.ts` 작성 — [contracts/routes.md §3](./contracts/routes.md#3-oauth-콜백--srcappauthcallbackroutets) 코드 그대로. 실패 시 한국어 에러 query로 리다이렉트
-- [ ] T070 [US4] `src/components/login/LoginScreen.tsx` 갱신 — T030의 placeholder를 실제 `<GoogleButton />`으로 교체, "또는" 구분선 추가
-- [ ] T071 [US4] `src/app/page.tsx`에서 `?error=...` query 읽어 `<AuthError>`로 표시 — OAuth 콜백 실패 흐름의 사용자 피드백
+- [X] T067 [P] [US4] `src/components/login/GoogleButton.tsx` 작성 — 디자인 토큰 사용, `aria-label`, `useAuth().signInWithGoogle` 호출
+- [X] T068 [US4] `src/context/AuthProvider.tsx` 갱신 — T026의 stub을 실제 구현으로 교체 (`signInWithOAuth` 호출)
+- [X] T069 [US4] `src/app/auth/callback/route.ts` 작성 — [contracts/routes.md §3](./contracts/routes.md#3-oauth-콜백--srcappauthcallbackroutets) 코드 그대로. 실패 시 한국어 에러 query로 리다이렉트
+- [X] T070 [US4] `src/components/login/LoginScreen.tsx` 갱신 — T030의 placeholder를 실제 `<GoogleButton />`으로 교체, "또는" 구분선 추가
+- [X] T071 [US4] `src/app/page.tsx`에서 `?error=...` query 읽어 `<AuthError>`로 표시 — OAuth 콜백 실패 흐름의 사용자 피드백
 
 **Checkpoint**: 4개 user story 모두 독립 동작. Google 로그인·이메일 로그인 공존, 둘 다 같은 데이터로 들어감 (단 v1에서 두 경로는 별개 계정으로 취급 — Assumptions).
 
@@ -192,13 +192,13 @@ description: "다중 사용자 클라우드 동기화 Todo — task 분해"
 
 **Purpose**: 회귀 방지·문서·배포 검증.
 
-- [ ] T072 `npm test` 전체 통과 — 기존 122개 + 신규(약 25개 test 파일) 모두 GREEN
-- [ ] T073 `npm run typecheck` 통과 — 전체 strict TypeScript 검증
-- [ ] T074 `npm run build` 통과 — Vercel 빌드 호환 확인 (next build)
-- [ ] T075 [quickstart.md §3.1~3.3](./quickstart.md#3-로컬-개발) 시나리오를 로컬에서 직접 수행 — 가입·시드·격리·멀티탭 동작 시각 확인
+- [X] T072 `npm test` 전체 통과 — 기존 122개 + 신규(약 25개 test 파일) 모두 GREEN
+- [X] T073 `npm run typecheck` 통과 — 전체 strict TypeScript 검증
+- [X] T074 `npm run build` 통과 — Vercel 빌드 호환 확인 (next build)
+- [X] T075 [quickstart.md §3.1~3.3](./quickstart.md#3-로컬-개발) 시나리오를 로컬에서 직접 수행 — 가입·시드·격리·멀티탭 동작 시각 확인
 - [ ] T076 [contracts/db-schema.md §6](./contracts/db-schema.md#6-검증-절차-constitution-governance-의무) 보안 체크리스트 7항목 모두 확인 (다른 사용자 데이터 접근 거부, RLS WITH CHECK 위반 거부, subtask user_id 트리거 강제 등)
-- [ ] T077 [P] `README.md` 갱신 — "백엔드 없음" 문구를 "Supabase Auth + Postgres + Realtime 사용. localStorage는 오프라인 캐시로만 보조" 식으로 수정. 환경변수 셋업 안내 추가 (Constitution v1.1.0의 follow-up TODO 해결)
-- [ ] T078 [P] `.specify/memory/constitution.md`의 follow-up TODO 영역 정리 — `specs/001-todo-app/plan.md` 관련 줄과 README.md 줄을 모두 ✅로 마킹
+- [X] T077 [P] `README.md` 갱신 — "백엔드 없음" 문구를 "Supabase Auth + Postgres + Realtime 사용. localStorage는 오프라인 캐시로만 보조" 식으로 수정. 환경변수 셋업 안내 추가 (Constitution v1.1.0의 follow-up TODO 해결)
+- [X] T078 [P] `.specify/memory/constitution.md`의 follow-up TODO 영역 정리 — `specs/001-todo-app/plan.md` 관련 줄과 README.md 줄을 모두 ✅로 마킹
 - [ ] T079 Vercel 첫 배포 — Vercel Dashboard에서 저장소 연결, `NEXT_PUBLIC_*` env vars 등록(Production·Preview·Development), 배포 트리거 — [quickstart.md §5.1](./quickstart.md#51-첫-배포)
 - [ ] T080 Vercel production URL을 Supabase Auth Redirect URLs에 등록 (T062의 Google OAuth client에도 동시 등록) — [quickstart.md §5.2](./quickstart.md#52-도메인--supabase에-등록)
 - [ ] T081 Production URL에서 T075 시나리오 재수행 — 실제 배포본에서 가입·시드·격리·멀티탭·Google 로그인 모두 동작 확인

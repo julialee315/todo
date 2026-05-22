@@ -16,6 +16,9 @@ vi.mock('@/lib/supabase-store/tasks-repo', () => ({
 vi.mock('@/lib/supabase-store/preferences', () => ({
   savePreference: adapter.savePreference,
 }));
+vi.mock('@/lib/supabase-store/realtime', () => ({
+  subscribeToUserChanges: vi.fn(() => () => {}),
+}));
 
 const auth = vi.hoisted(() => ({ user: null as null | { id: string; email: string } }));
 vi.mock('@/context/AuthProvider', () => ({

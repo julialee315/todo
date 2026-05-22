@@ -51,6 +51,12 @@ import {
   saveSnapshot,
   clearSnapshot,
 } from '@/lib/supabase-store/cache';
+import { subscribeToUserChanges } from '@/lib/supabase-store/realtime';
+import {
+  dbSubtaskToDomain,
+  dbTaskToDomain,
+} from '@/lib/supabase-store/mappers';
+import type { DbSubtaskRow, DbTaskRow, RealtimeChange } from '@/lib/types';
 
 export interface TasksContextValue {
   tasks: Task[];
@@ -75,6 +81,70 @@ export interface TasksContextValue {
 const TasksContext = createContext<TasksContextValue | null>(null);
 
 const OFFLINE_MSG = '오프라인 상태에서는 변경할 수 없어요.';
+
+// Map a single postgres_changes payload to a reducer action. INSERT/UPDATE
+// carry a full DbTaskRow / DbSubtaskRow; we strip it down to the domain
+// shape before dispatching. user_preferences events are handled by
+// ThemeProvider, not here.
+function dispatchRealtime(
+  dispatch: (a: import('@/lib/store/reducer').TaskAction) => void,
+  change: RealtimeChange,
+): void {
+  if (change.table === 'tasks') {
+    const row = change.new as DbTaskRow | null;
+    const oldRow = change.old as DbTaskRow | null;
+    switch (change.event) {
+      case 'INSERT':
+        if (row) dispatch({ type: 'add', task: dbTaskToDomain(row, []) });
+        return;
+      case 'UPDATE':
+        if (row) {
+          const patch = dbTaskToDomain(row, []);
+          // Don't clobber locally-known subs with the empty list from the row.
+          // (subs changes come through the subtasks channel.)
+          const { subs: _drop, ...rest } = patch;
+          void _drop;
+          dispatch({ type: 'update', id: row.id, patch: rest });
+        }
+        return;
+      case 'DELETE':
+        if (oldRow) dispatch({ type: 'delete', id: oldRow.id });
+        return;
+    }
+  } else if (change.table === 'subtasks') {
+    const row = change.new as DbSubtaskRow | null;
+    const oldRow = change.old as DbSubtaskRow | null;
+    switch (change.event) {
+      case 'INSERT':
+        if (row)
+          dispatch({
+            type: 'addSub',
+            taskId: row.task_id,
+            sub: dbSubtaskToDomain(row),
+          });
+        return;
+      case 'UPDATE':
+        if (row)
+          dispatch({
+            type: 'updateSub',
+            taskId: row.task_id,
+            subId: row.id,
+            patch: { text: row.text, done: row.done },
+          });
+        return;
+      case 'DELETE':
+        if (oldRow)
+          dispatch({
+            type: 'deleteSub',
+            taskId: oldRow.task_id,
+            subId: oldRow.id,
+          });
+        return;
+    }
+  }
+  // user_preferences changes are intentionally ignored here — ThemeProvider
+  // subscribes separately.
+}
 
 export function TasksProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -134,6 +204,18 @@ export function TasksProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (ready) saveSnapshot(tasks);
   }, [tasks, ready]);
+
+  // Realtime subscription: once we have an authenticated user, any change to
+  // that user's tasks / subtasks (from another tab, another device, or this
+  // tab's own writes) is dispatched through the existing reducer actions.
+  // The reducer's id-based dedup makes echoes of our own writes a no-op.
+  useEffect(() => {
+    if (!user) return;
+    const stop = subscribeToUserChanges(supabase, user.id, (change) => {
+      dispatchRealtime(dispatch, change);
+    });
+    return stop;
+  }, [user, supabase]);
 
   const requireOnlineUser = useCallback(() => {
     if (!user) throw new Error('로그인이 필요해요.');

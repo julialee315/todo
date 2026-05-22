@@ -11,8 +11,9 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Icon, GoogleIcon } from '@/components/shared/Icon';
+import { Icon } from '@/components/shared/Icon';
 import { EmailPasswordForm } from '@/components/login/EmailPasswordForm';
+import { GoogleButton } from '@/components/login/GoogleButton';
 import { AuthError } from '@/components/login/AuthError';
 import { useAuth } from '@/context/AuthProvider';
 
@@ -21,7 +22,7 @@ type Tab = 'signin' | 'signup';
 export function LoginScreen() {
   const router = useRouter();
   const search = useSearchParams();
-  const { signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth();
+  const { signInWithPassword, signUpWithPassword } = useAuth();
 
   const [tab, setTab] = useState<Tab>('signin');
   const [error, setError] = useState<string | null>(
@@ -41,13 +42,6 @@ export function LoginScreen() {
       return;
     }
     router.push(target);
-  }
-
-  async function handleGoogle() {
-    setError(null);
-    const res = await signInWithGoogle();
-    if (res.error) setError(res.error);
-    // Success path is a full-page OAuth redirect; nothing else to do here.
   }
 
   return (
@@ -94,15 +88,7 @@ export function LoginScreen() {
             </p>
           </div>
 
-          <button
-            className="btn btn--outline"
-            type="button"
-            style={{ height: 44, justifyContent: 'center', gap: 8, width: '100%' }}
-            onClick={handleGoogle}
-            aria-label="Google로 계속하기"
-          >
-            <GoogleIcon size={16} /> Google로 계속하기
-          </button>
+          <GoogleButton onError={setError} />
 
           <div className="login__divider">또는 이메일로</div>
 

@@ -27,12 +27,23 @@ Templates requiring updates:
   ✅ .specify/templates/tasks-template.md — generic; 변경 불필요.
 
 Follow-up TODOs:
-  - README.md: 라인 43 "**localStorage** 영속화 (백엔드 없음)" 문구는 현재 master
-    상태 기준이라 그대로 둠. Supabase 통합 feature가 spec/plan으로 채택될 때
-    README도 함께 갱신.
-  - specs/001-todo-app/plan.md: 현재 feature는 Supabase 미사용이므로 Constitution
-    Check 그대로 유효. 신규 feature(예: 002-supabase-auth)가 만들어질 때 plan에
-    Supabase 게이트 추가.
+  ✅ README.md — Supabase 도입 + Vercel 안내로 갱신됨 (Feature 002 구현 시점,
+     branch `002-cloud-sync-multiuser`).
+  ✅ specs/001-todo-app/plan.md — 별도 spec 002-cloud-sync-multiuser가 생성되어
+     Supabase 게이트는 그쪽 plan에 반영됨 (Constitution Check 표 + Supabase 보안 행).
+-->
+
+<!--
+Feature 002 implementation notes (2026-05-22 ~ ):
+- Phase 1+2 (Foundation): commits 58b3da0, e6c8033
+- US1 (P1, email/password auth): commit 6a2f32d
+- US2 (P2, per-user cloud data + RLS): commit 3390829
+- US3+US4 (P3 realtime + P4 Google OAuth) + Polish: this branch's head
+External setup that remains the user's responsibility (cannot be automated
+inside this repo): T001 Supabase project creation + key into .env.local;
+T009 `supabase db push`; T010 `supabase db advisors`; T062 Google Cloud
+Console OAuth client + Supabase provider config; T079/T080 Vercel deploy +
+OAuth redirect URL whitelisting.
 -->
 
 # demodev Tasks Constitution

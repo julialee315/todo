@@ -10,8 +10,11 @@
 git clone https://github.com/jocoding-ax-partners/ax-academy-1.git
 cd ax-academy-1
 npm install
+cp .env.local.example .env.local   # 빈 placeholder. Supabase 셋업 후 실제 값 채우기
 npm run dev   # http://localhost:3000
 ```
+
+> Supabase 프로젝트가 없으면 인증·메인 화면이 동작하지 않아. Quickstart §1 참고.
 
 ### 브랜치 구조
 
@@ -40,7 +43,10 @@ git checkout master
 - **Next.js 15** App Router + TypeScript (strict)
 - **React 18** + Context + useReducer
 - **Vitest** + React Testing Library
-- **localStorage** 영속화 (백엔드 없음)
+- **Supabase** Auth / Postgres + RLS / Realtime (Feature 002, branch `002-cloud-sync-multiuser`)
+  - `localStorage`는 오프라인 표시용 캐시로만 사용 — authoritative 데이터는 Supabase
+  - 자세한 셋업: [`specs/002-cloud-sync-multiuser/quickstart.md`](specs/002-cloud-sync-multiuser/quickstart.md)
+- **Vercel** 배포 (env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`)
 
 ## 화면 구성
 

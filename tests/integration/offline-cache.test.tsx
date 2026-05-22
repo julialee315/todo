@@ -40,6 +40,9 @@ vi.mock('@/lib/supabase-store/subtasks', () => ({
   updateSubtask: adapter.updateSubtask,
   deleteSubtask: adapter.deleteSubtask,
 }));
+vi.mock('@/lib/supabase-store/realtime', () => ({
+  subscribeToUserChanges: vi.fn(() => () => {}),
+}));
 
 const auth = vi.hoisted(() => ({
   user: { id: 'u-1', email: 'a@b.c' } as null | { id: string; email: string },
