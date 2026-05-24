@@ -99,13 +99,25 @@ P1~P3까지는 이메일/비밀번호만으로 가능하니, P4 구현 직전에
 
 ## 3. 로컬 개발
 
+### 3.0 (필수) 학습/개발 모드 — 이메일 확인 끄기
+
+Supabase는 기본적으로 회원가입 시 확인 메일을 보내고, 사용자가 링크를 클릭해야 세션이 생긴다. 또 Free Tier는 시간당 ~2건만 보낼 수 있어서 가입 시연을 여러 번 돌리면 곧바로 `429 email rate limit exceeded`에 막힌다. 학습 흐름에선 끄는 게 표준:
+
+1. https://supabase.com/dashboard/project/`<your-project-ref>`/auth/providers
+2. **Email** provider 클릭
+3. **Confirm email** 토글을 **OFF**
+4. Save
+
+→ 가입 즉시 세션 발급, 메일 전송 안 함. 프로덕션 배포 직전에 다시 ON으로 돌리고 SMTP를 연결한다.
+
+### 3.1 첫 동작 확인 (P1)
+
 ```bash
 cd /Users/julia/Desktop/AX-project/ax-academy-1
 npm install         # 이미 했으면 스킵
 npm run dev         # http://localhost:3000
 ```
 
-### 3.1 첫 동작 확인 (P1)
 
 1. http://localhost:3000 접속 → 로그인 화면
 2. "회원가입" 탭 → 이메일 + 8자 이상 비밀번호 → 가입
@@ -172,6 +184,9 @@ npm run typecheck      # TypeScript 검증
 |------|------|------|
 | 로그인 후 새로고침하면 로그아웃됨 | middleware 미동작 | `src/middleware.ts` 존재 + `matcher` 설정 확인 |
 | OAuth callback에서 "Invalid redirect URL" | Supabase에 URL 미등록 | 2.2 단계 다시 |
+| 가입 직후 `요청이 너무 많습니다` 또는 `429 email rate limit` | Supabase의 confirmation 메일 시간당 한도 초과 | 학습 중이면 §3.0의 "Confirm email" 토글 OFF로 전환 |
+| 가입은 되는데 `/main`에 못 들어감 | "Confirm email"이 켜져있어서 사용자가 만들어졌지만 세션이 생기지 않음 | 같은 §3.0 토글 끄거나, 받은 메일의 confirm 링크 클릭 |
+| `Email address ... is invalid` | Supabase가 `example.com`·`.local` TLD·plus-addressing(`a+b@`) 등을 차단 | 실제 사용 가능한 도메인의 이메일 사용 |
 | Realtime 이벤트가 안 옴 | publication 미설정 | db-schema.md §4 SQL 실행 |
 | 다른 사용자의 데이터가 보임 | RLS 미적용 또는 정책 누락 | db-schema.md §3 SQL 모두 실행, Dashboard에서 RLS Enabled 확인 |
 | `service_role` 환경변수 노출 | 키 잘못 복사 | Vercel·`.env.local` 모두에서 즉시 제거, Supabase Dashboard에서 키 재발급 |

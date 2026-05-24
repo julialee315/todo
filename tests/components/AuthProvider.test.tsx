@@ -139,6 +139,20 @@ describe('AuthProvider: signUpWithPassword', () => {
     expect(handlers.signUp).not.toHaveBeenCalled();
   });
 
+  it('translates Supabase’s email_address_invalid into a clear Korean hint', async () => {
+    handlers.signUp.mockResolvedValueOnce({
+      data: { user: null },
+      error: { message: 'Email address "demo@test.local" is invalid' },
+    });
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    let res: { error: string | null } | undefined;
+    await act(async () => {
+      res = await result.current.signUpWithPassword('demo@test.local', 'longenoughpw');
+    });
+    expect(res!.error).toMatch(/이메일 주소가 유효하지 않습니다/);
+  });
+
   it('translates the duplicate-email error into a friendly message', async () => {
     handlers.signUp.mockResolvedValueOnce({
       data: { user: null },

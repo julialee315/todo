@@ -55,6 +55,15 @@ function translateAuthError(message: string): string {
   if (m.includes('email not confirmed')) {
     return '이메일 확인이 필요해요.';
   }
+  if (
+    m.includes('email_address_invalid') ||
+    m.includes('email address') && m.includes('invalid')
+  ) {
+    return '이메일 주소가 유효하지 않습니다. 실제 사용 가능한 주소인지 확인해 주세요.';
+  }
+  if (m.includes('weak password') || m.includes('password should')) {
+    return '비밀번호가 너무 약해요. 더 복잡한 조합을 사용해 주세요.';
+  }
   if (m.includes('rate limit') || m.includes('too many')) {
     return '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.';
   }
