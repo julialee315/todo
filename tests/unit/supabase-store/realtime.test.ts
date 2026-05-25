@@ -71,7 +71,11 @@ describe('subscribeToUserChanges', () => {
   it('opens a single channel named for the user and binds the 3 table handlers', () => {
     const f = makeFakeClient();
     subscribeToUserChanges(f.client, USER, vi.fn());
-    expect(f.channel).toHaveBeenCalledWith(`tasks-by-user-${USER}`);
+    expect(f.channel).toHaveBeenCalledTimes(1);
+    // Channel name carries the user id plus a per-call random suffix so two
+    // callers (TasksProvider + ThemeProvider) don't collide on the same name.
+    const channelName = (f.channel as any).mock.calls[0][0];
+    expect(channelName).toMatch(new RegExp(`^tasks-by-user-${USER}-[a-z0-9]{6}$`));
     expect(f.channelObj.on).toHaveBeenCalledTimes(3);
     const tables = (f.channelObj.on as any).mock.calls.map(
       (c: any[]) => c[1]?.table,

@@ -22,12 +22,23 @@ type PgChange<R> = {
   old: R | null;
 };
 
+// supabase-js identifies channels by name globally; if two callers (e.g.
+// TasksProvider + ThemeProvider) opened a channel with the same name we'd
+// end up trying to .on() bind extra handlers AFTER subscribe(), which the
+// realtime client refuses. A short random suffix per call avoids that — the
+// websocket connection is still multiplexed, so the extra "channels" are
+// cheap.
+function uniqueChannelName(userId: string): string {
+  const suffix = Math.random().toString(36).slice(2, 8);
+  return `tasks-by-user-${userId}-${suffix}`;
+}
+
 export function subscribeToUserChanges(
   client: SupabaseClient,
   userId: string,
   onChange: (change: RealtimeChange) => void,
 ): () => void {
-  const channel = client.channel(`tasks-by-user-${userId}`);
+  const channel = client.channel(uniqueChannelName(userId));
 
   const bind = <R>(table: RealtimeTable) => {
     // The supabase-js Channel type for postgres_changes is complex; cast at
