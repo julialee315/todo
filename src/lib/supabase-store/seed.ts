@@ -1,10 +1,19 @@
 // Seed the first-time user with the SAMPLE_TASKS corpus, idempotently.
 //
-// Idempotency is anchored on user_preferences.seeded_at: if it's set, we
-// return early. Otherwise we insert the 14 sample tasks, their subtasks, and
-// flip seeded_at to now(). If two tabs first-login in parallel, one of them
-// will see seeded_at populated (skip) or hit a duplicate-key error on upsert
-// (swallowed) — either way we don't double-seed.
+// The idempotency guard has to be *atomic*: React 18 Strict Mode (dev) and
+// fast network round-trips can fire two or three concurrent ensureSeed()
+// calls before any of them has finished writing the `seeded_at` marker. A
+// naive "SELECT then INSERT" check races: all three callers read NULL,
+// each inserts 14 tasks, and the user ends up with 42.
+//
+// The fix is to claim the seed slot with a single conditional UPDATE:
+//
+//   UPDATE user_preferences SET seeded_at = now()
+//     WHERE user_id = $1 AND seeded_at IS NULL
+//     RETURNING user_id;
+//
+// Postgres serializes that statement, so exactly one caller sees an
+// affected row. The losers see zero rows and bail before touching `tasks`.
 //
 // Contract: specs/002-cloud-sync-multiuser/contracts/db-schema.md §5.
 
@@ -15,16 +24,29 @@ export async function ensureSeed(
   client: SupabaseClient,
   userId: string,
 ): Promise<void> {
-  const { data: pref } = await client
+  // 1. Make sure the preferences row exists. ignoreDuplicates so concurrent
+  //    callers don't error on the PK; we don't care who wrote it.
+  const { error: insertErr } = await client
     .from('user_preferences')
-    .select('seeded_at')
-    .eq('user_id', userId)
-    .maybeSingle();
-  if (pref?.seeded_at) return;
+    .upsert(
+      { user_id: userId },
+      { onConflict: 'user_id', ignoreDuplicates: true },
+    );
+  if (insertErr && insertErr.code !== '23505') throw insertErr;
 
-  // 1) Insert the 14 tasks. The DB returns them with their fresh ids so we
-  //    can attach subtasks. We keep the SAMPLE_TASKS order so subs map by
-  //    index — simpler than a title-join.
+  // 2. Atomic claim — only the caller whose UPDATE actually flips
+  //    seeded_at from NULL to now() proceeds. Concurrent callers get an
+  //    empty `data` array (the WHERE clause matches nothing for them).
+  const { data: claimed, error: claimErr } = await client
+    .from('user_preferences')
+    .update({ seeded_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .is('seeded_at', null)
+    .select('user_id');
+  if (claimErr) throw claimErr;
+  if (!claimed || claimed.length === 0) return; // lost the race — already seeded
+
+  // 3. Bulk insert the 14 sample tasks.
   const taskRows = SAMPLE_TASKS.map((t) => ({
     user_id: userId,
     title: t.title,
@@ -39,10 +61,16 @@ export async function ensureSeed(
     .from('tasks')
     .insert(taskRows)
     .select('id, title');
-  if (taskErr) throw taskErr;
+  if (taskErr) {
+    // Roll the marker back so the next mount can retry cleanly.
+    await client
+      .from('user_preferences')
+      .update({ seeded_at: null })
+      .eq('user_id', userId);
+    throw taskErr;
+  }
 
-  // 2) Insert all subtasks in one batch. user_id is set by the BEFORE
-  //    INSERT trigger from the parent task.
+  // 4. Bulk insert subtasks. user_id is set by the BEFORE INSERT trigger.
   const subRows = SAMPLE_TASKS.flatMap((t, idx) =>
     (t.subs ?? []).map((s, j) => ({
       task_id: (inserted ?? [])[idx]?.id,
@@ -55,11 +83,4 @@ export async function ensureSeed(
     const { error: subErr } = await client.from('subtasks').insert(subRows);
     if (subErr) throw subErr;
   }
-
-  // 3) Mark seeded. A 23505 (unique violation) from a parallel session is
-  //    fine — somebody else already marked it.
-  const { error: prefErr } = await client
-    .from('user_preferences')
-    .upsert({ user_id: userId, seeded_at: new Date().toISOString() });
-  if (prefErr && prefErr.code !== '23505') throw prefErr;
 }
